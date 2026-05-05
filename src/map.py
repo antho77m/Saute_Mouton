@@ -15,8 +15,9 @@ def findSheepInit(map):
     for i in range(len(map)):
         for j in range(len(map[i])):
             if map[i][j] == -1:
-                return (i*cs, j*cs)
+                return (j * cs, i * cs)   # x, y
     assert False, "No sheep found in the map"
+
 
 class Map:
     # return a list of list containing integers representing initial map
@@ -46,9 +47,15 @@ class Map:
     
     def showSheep(self):
         cell_size = M_CELL_SIZE(self.map)
-        sheep_size = cell_size // 2 
-        i, j = self.sheep 
-        rectangle(i,j,j-sheep_size,j-sheep_size, couleur="red", remplissage="red")
+        sheep_size = cell_size // 2
 
+        x, y = self.sheep  # coordonnées en pixels
+
+        ax = x + cell_size//4
+        ay = y + cell_size//2
+        bx = ax + sheep_size
+        by = ay + sheep_size
+
+        rectangle(ax, ay, bx, by, couleur="red", remplissage="red")
 
     

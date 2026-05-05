@@ -1,7 +1,7 @@
 from cons import *
 from fltk import *
 
-def loadMap(filename):
+def load_map(filename):
     with open(filename, 'r') as f:
         map = []
         for line in f:
@@ -10,7 +10,7 @@ def loadMap(filename):
         print(map)
         return map
 
-def findSheepInit(map):
+def find_sheep_init(map):
     cs = M_CELL_SIZE(map)
     for i in range(len(map)):
         for j in range(len(map[i])):
@@ -22,12 +22,12 @@ class Map:
     # return a list of list containing integers representing initial map
         
     def __init__(self, filename):
-        self.map = loadMap(filename)
-        self.sheep = findSheepInit(self.map)
+        self.map = load_map(filename)
+        self.sheep = find_sheep_init(self.map)
 
 
     # take a map (List of List of integers)
-    def showMap(self):
+    def show_map(self):
         map = self.map 
         cell_size = M_CELL_SIZE(map)
         for i in range(len(map)):
@@ -44,7 +44,7 @@ class Map:
                         couleur = "green"
                 rectangle(j * cell_size, i * cell_size, (j + 1) * cell_size, (i + 1) * cell_size,couleur=couleur, remplissage=couleur)
     
-    def showSheep(self):
+    def show_sheep(self):
         cell_size = M_CELL_SIZE(self.map)
         sheep_size = cell_size // 2 
         i, j = self.sheep 

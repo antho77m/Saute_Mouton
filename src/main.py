@@ -10,10 +10,10 @@ def main():
     cree_fenetre(M_WIDTH, M_HEIGHT)
     while True:
         mise_a_jour()
-        map.showMap()
-        map.showSheep()
+        map.show_map()
+        map.show_sheep()
         attend_ev()  # bloque l'exécution jusqu'à un clic ou une touche
-        break
+    
     ferme_fenetre()
 
 

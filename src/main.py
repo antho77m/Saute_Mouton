@@ -17,8 +17,8 @@ def main():
         mise_a_jour()
         efface_tout()
 
-        map.showMap()
-        map.showSheep()
+        map.show_map()
+        map.show_sheep()
         if vector.is_complete():
             vector.draw()
         

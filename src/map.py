@@ -2,7 +2,6 @@ from cons import *
 from fltk import *
 
 def load_map(filename):
-def load_map(filename):
     with open(filename, 'r') as f:
         map = []
         for line in f:
@@ -11,7 +10,6 @@ def load_map(filename):
         print(map)
         return map
 
-def find_sheep_init(map):
 def find_sheep_init(map):
     cs = M_CELL_SIZE(map)
     for i in range(len(map)):

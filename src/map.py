@@ -1,7 +1,7 @@
 from cons import *
 from fltk import *
 
-def loadMap(filename):
+def load_map(filename):
     with open(filename, 'r') as f:
         map = []
         for line in f:
@@ -10,7 +10,7 @@ def loadMap(filename):
         print(map)
         return map
 
-def findSheepInit(map):
+def find_sheep_init(map):
     cs = M_CELL_SIZE(map)
     for i in range(len(map)):
         for j in range(len(map[i])):
@@ -18,13 +18,34 @@ def findSheepInit(map):
                 return (j * cs, i * cs)   # x, y
     assert False, "No sheep found in the map"
 
+def valid_map(map):
+    # check if the map is valid (contains only -2, -1, 0, 1)
+    sheep_count = 0
+    end_count = 0
+    for row in map:
+        for cell in row:
+            if cell not in [-2, -1, 0, 1]:
+                return False
+            if cell == -1:
+                sheep_count += 1
+            if cell == 1:
+                end_count += 1
+    if sheep_count == 1 or end_count == 1:
+        return True
+    return False
+
+
 
 class Map:
-    # return a list of list containing integers representing initial map
+    # list of solid cell :
+    _solid = [-2]
+
         
     def __init__(self, filename):
-        self.map = loadMap(filename)
-        self.sheep = findSheepInit(self.map)
+        self.map = load_map(filename)
+        self.sheep = find_sheep_init(self.map)
+        if not valid_map(self.map):
+            exit("Invalid map")
 
 
     # take a map (List of List of integers)
@@ -58,4 +79,11 @@ class Map:
 
         rectangle(ax, ay, bx, by, couleur="red", remplissage="red")
 
-    
+    def apply_vec_on_sheep(self, vector):
+        # apply the vector on the sheep
+        x, y = self.sheep
+        dx = vector.x2 - vector.x1
+        dy = vector.y2 - vector.y1
+        new_x = x + dx
+        new_y = y + dy
+        self.sheep = (new_x, new_y)

@@ -38,7 +38,7 @@ def valid_map(map):
 
 class Map:
     # list of solid cell :
-    _solid = [-2]
+    _solid = [-2,1]
 
         
     def __init__(self, filename):
@@ -87,3 +87,34 @@ class Map:
         new_x = x + dx
         new_y = y + dy
         self.sheep = (new_x, new_y)
+        if self.sheep_intersect_solid():
+            self.sheep = (x, y)  # reset the sheep position if it intersect a solid cell
+
+    def sheep_intersect_solid(self):
+        x, y = self.sheep
+        cell_size = M_CELL_SIZE(self.map)
+        sheep_size = cell_size // 2
+
+        # Recalcule EXACT du rectangle du mouton
+        ax = x + cell_size//4
+        ay = y + cell_size//2
+        bx = ax + sheep_size
+        by = ay + sheep_size
+
+        # Coins du mouton
+        corners = [
+            (ax, ay),       # haut gauche
+            (bx, ay),       # haut droit
+            (ax, by),       # bas gauche
+            (bx, by)        # bas droit
+        ]
+
+        for cx, cy in corners:
+            i = int(cy // cell_size)
+            j = int(cx // cell_size)
+
+            if 0 <= i < len(self.map) and 0 <= j < len(self.map[0]):
+                if self.map[i][j] in self._solid:
+                    return True
+
+        return False

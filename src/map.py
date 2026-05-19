@@ -1,6 +1,8 @@
 from cons import *
 from fltk import *
 
+from vector import Vector
+
 def load_map(filename):
     with open(filename, 'r') as f:
         map = []
@@ -44,8 +46,12 @@ class Map:
     def __init__(self, filename):
         self.map = load_map(filename)
         self.sheep = find_sheep_init(self.map)
+        self.current_vector = Vector()
         if not valid_map(self.map):
             exit("Invalid map")
+
+    def __str__(self):
+        return str(self.map) + "\nSheep position: " + str(self.sheep) + "\nCurrent vector: " + str(self.current_vector)
 
 
     # take a map (List of List of integers)
@@ -79,29 +85,39 @@ class Map:
 
         rectangle(ax, ay, bx, by, couleur="red", remplissage="red")
 
-    def apply_vec_on_sheep(self, vector):
-        # apply the vector on the sheep
+    def apply_vec_on_sheep(self, new_vector:Vector):
+        if not new_vector.is_complete() and not self.current_vector.is_complete():
+            return
+        if self.current_vector is not None and new_vector.is_complete():
+            new_vector.normalize()  # normalize the vector to have a length of 1
+            self.current_vector = new_vector
         x, y = self.sheep
-        dx = vector.x2 - vector.x1
-        dy = vector.y2 - vector.y1
+
+        print(self.current_vector)
+        gravity = -0.5
+
+        dx = self.current_vector.x2 - self.current_vector.x1
+        dy = (self.current_vector.y2 - self.current_vector.y1) + gravity
+        
+
         new_x = x + dx
         new_y = y + dy
+
         self.sheep = (new_x, new_y)
         if self.sheep_intersect_solid():
             self.sheep = (x, y)  # reset the sheep position if it intersect a solid cell
+            self.current_vector.clear()  # reset the current vector if the sheep intersect a solid cell
 
     def sheep_intersect_solid(self):
         x, y = self.sheep
         cell_size = M_CELL_SIZE(self.map)
         sheep_size = cell_size // 2
 
-        # Recalcule EXACT du rectangle du mouton
         ax = x + cell_size//4
         ay = y + cell_size//2
         bx = ax + sheep_size
         by = ay + sheep_size
 
-        # Coins du mouton
         corners = [
             (ax, ay),       # haut gauche
             (bx, ay),       # haut droit
@@ -118,3 +134,4 @@ class Map:
                     return True
 
         return False
+

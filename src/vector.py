@@ -7,6 +7,10 @@ class Vector:
         self.x2 = None
         self.y2 = None
 
+    def __str__(self):
+        return f"Vector(({self.x1}, {self.y1}) -> ({self.x2}, {self.y2}))"
+        
+
     def set_start(self, x1:int, y1:int):
         self.x1 = x1
         self.y1 = y1
@@ -26,6 +30,22 @@ class Vector:
         self.y1 = None
         self.x2 = None
         self.y2 = None
+
+    '''
+    normalize the vector to have a length of 1, keeping the same direction and return intensity
+    '''
+    def normalize(self):
+        if not self.is_complete():
+            assert False, "Cannot normalize an incomplete vector"
+        dx = self.x2 - self.x1
+        dy = self.y2 - self.y1
+        length = (dx**2 + dy**2)**0.5
+        if length == 0:
+            return 0
+        self.x2 = self.x1 + dx / length
+        self.y2 = self.y1 + dy / length
+        return length
+
 
     def draw(self, couleur="blue", epaisseur=3):
         if self.is_complete():

@@ -21,23 +21,23 @@ def main():
         map.show_sheep()
         if vector.is_complete():
             vector.draw()
+        elif not vector.is_void():
+            x = abscisse_souris()
+            y = ordonnee_souris()
+            vector.draw_preview(x, y)
         
-        if vector.is_void():
-            coo = ask_clic()
-            if coo is not None:
+        coo = ask_clic()
+        if coo is not None:
+            print(coo)
+            if vector.is_void():
                 vector.set_start(coo[0], coo[1])
-        elif not vector.is_complete():
-            coo = ask_clic()
-            if coo is not None:
-                vector.set_end(coo[0], coo[1])
-            else: 
-                x = abscisse_souris()
-                y = ordonnee_souris()
-                vector.draw_preview(x, y)
-        else:
-            map.apply_vec_on_sheep(vector)
-            vector.clear()
-            pass
+            elif not vector.is_complete():
+                    vector.set_end(coo[0], coo[1])
+                    intensity = vector.normalize()
+            else :
+                vector.clear()
+                
+        map.apply_vec_on_sheep(vector)
     ferme_fenetre()
 
 

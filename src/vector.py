@@ -35,17 +35,14 @@ class Vector:
     normalize the vector to have a length of 1, keeping the same direction and return intensity
     '''
     def normalize(self):
-        if not self.is_complete():
-            assert False, "Cannot normalize an incomplete vector"
         dx = self.x2 - self.x1
         dy = self.y2 - self.y1
-        length = (dx**2 + dy**2)**0.5
+        length = (dx**2 + dy**2) ** 0.5
         if length == 0:
             return 0
         self.x2 = self.x1 + dx / length
         self.y2 = self.y1 + dy / length
-        return length
-
+        return length  
 
     def draw(self, couleur="blue", epaisseur=3):
         if self.is_complete():
@@ -53,3 +50,11 @@ class Vector:
 
     def draw_preview(self, x, y, couleur="blue", epaisseur=3):
         ligne(self.x1, self.y1, x, y, couleur=couleur, epaisseur=epaisseur)
+
+    def copy(self):
+        new_vector = Vector()
+        new_vector.x1 = self.x1
+        new_vector.y1 = self.y1
+        new_vector.x2 = self.x2
+        new_vector.y2 = self.y2
+        return new_vector

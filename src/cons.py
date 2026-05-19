@@ -1,5 +1,8 @@
 M_WIDTH = 700 
 M_HEIGHT = 700
+M_FPS = 60
+M_GRAVITY = 10
+
 
 def M_CELL_SIZE(map):
     rows = len(map)

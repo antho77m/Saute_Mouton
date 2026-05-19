@@ -47,6 +47,9 @@ class Map:
         self.map = load_map(filename)
         self.sheep = find_sheep_init(self.map)
         self.current_vector = Vector()
+        self.current_intensity = 0
+        self.velocity_x = 0
+        self.velocity_y = 0
         if not valid_map(self.map):
             exit("Invalid map")
 
@@ -85,28 +88,52 @@ class Map:
 
         rectangle(ax, ay, bx, by, couleur="red", remplissage="red")
 
-    def apply_vec_on_sheep(self, new_vector:Vector):
+    def apply_vec_on_sheep(self, new_vector: Vector):
         if not new_vector.is_complete() and not self.current_vector.is_complete():
             return
-        if self.current_vector is not None and new_vector.is_complete():
-            new_vector.normalize()  # normalize the vector to have a length of 1
-            self.current_vector = new_vector
+
+        if not self.current_vector.is_complete() and new_vector.is_complete(): 
+            vec = new_vector.copy() 
+            intensity = vec.normalize()  
+            self.current_vector = vec
+            speed = min(intensity*2, 500) / M_FPS
+            self.velocity_x = (vec.x2 - vec.x1) * speed
+            self.velocity_y = ((vec.y2 - vec.y1) * speed) - M_GRAVITY / M_FPS
+
         x, y = self.sheep
-
-        print(self.current_vector)
-        gravity = -0.5
-
-        dx = self.current_vector.x2 - self.current_vector.x1
-        dy = (self.current_vector.y2 - self.current_vector.y1) + gravity
-        
-
-        new_x = x + dx
-        new_y = y + dy
-
+        self.velocity_y += M_GRAVITY / M_FPS
+        new_x = x + self.velocity_x
+        new_y = y + self.velocity_y
         self.sheep = (new_x, new_y)
+
         if self.sheep_intersect_solid():
-            self.sheep = (x, y)  # reset the sheep position if it intersect a solid cell
-            self.current_vector.clear()  # reset the current vector if the sheep intersect a solid cell
+            col_vertical = False
+            col_horizontal = False
+            self.sheep = (new_x, y)
+            if self.sheep_intersect_solid():  # collision horizontale
+                col_horizontal = True
+            self.sheep = (x, new_y)
+            if self.sheep_intersect_solid():  # collision verticale (sol ou plafond)
+                col_vertical = True
+            
+
+            if col_vertical and col_horizontal:
+                self.current_vector.clear()
+                self.velocity_x = 0
+                self.velocity_y = 0
+                self.sheep = (x, y)
+            elif col_vertical:
+                self.velocity_y = 0
+                self.sheep = (x, new_y) 
+                self.sheep = (new_x if not col_horizontal else x, new_y)
+            elif col_horizontal:
+                self.velocity_x = 0
+                self.sheep = (new_x, y)
+
+            if self.velocity_x == 0 and self.velocity_y == 0:
+                self.current_vector.clear()
+
+
 
     def sheep_intersect_solid(self):
         x, y = self.sheep

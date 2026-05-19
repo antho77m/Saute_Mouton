@@ -6,6 +6,8 @@ from vector import Vector
 
 
 
+
+
 def main():
 
     vector = Vector()
@@ -13,8 +15,11 @@ def main():
     map = Map("res/carte.txt")
 
     cree_fenetre(M_WIDTH, M_HEIGHT)
+    sleep_fps= sleep_for_fps(M_FPS)
+
     while True:
         mise_a_jour()
+        sleep_fps()
         efface_tout()
 
         map.show_map()
@@ -33,11 +38,12 @@ def main():
                 vector.set_start(coo[0], coo[1])
             elif not vector.is_complete():
                     vector.set_end(coo[0], coo[1])
-                    intensity = vector.normalize()
             else :
                 vector.clear()
                 
         map.apply_vec_on_sheep(vector)
+        if vector.is_complete(): # on clear apres avoir donné le vector à la map pour éviter de réapliquer le même vector plusieurs fois
+            vector.clear()
     ferme_fenetre()
 
 

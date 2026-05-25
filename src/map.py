@@ -4,6 +4,9 @@ from fltk import *
 from vector import Vector
 
 def load_map(filename):
+    """Load a map from a file. The file should contain rows of integers separated by commas.
+    Returns a 2D list of integers representing the map.
+    """
     with open(filename, 'r') as f:
         map = []
         for line in f:
@@ -79,7 +82,7 @@ class Map:
         cell_size = M_CELL_SIZE(self.map)
         x, y = self.sheep
         ax = x + cell_size//4
-        ay = y + cell_size//2  # ✅ centré
+        ay = y + cell_size//2  
         bx = ax + cell_size//2
         by = ay + cell_size//2
         rectangle(ax, ay, bx, by, couleur="red", remplissage="red")
@@ -88,7 +91,7 @@ class Map:
         x, y = self.sheep
         cell_size = M_CELL_SIZE(self.map)
         ax = x + cell_size//4
-        ay = y + cell_size//2  # ✅ même chose que show_sheep
+        ay = y + cell_size//2  
         bx = ax + cell_size//2
         by = ay + cell_size//2
         corners = [(ax, ay), (bx, ay), (ax, by), (bx, by)]
@@ -99,6 +102,48 @@ class Map:
                 if self.map[i][j] in self._solid:
                     return True
         return False
+
+    
+    def _resolve_collision(self, old_x, old_y, new_x, new_y, was_falling):
+        """
+        Déplace le mouton de (old_x, old_y) vers (new_x, new_y) en subdivisant
+        le mouvement pour éviter le tunneling. Retourne (final_x, final_y).
+        Met à jour velocity_x / velocity_y en cas de collision.
+        """
+        steps = max(1, int(max(abs(new_x - old_x), abs(new_y - old_y))))
+        dx = (new_x - old_x) / steps
+        dy = (new_y - old_y) / steps
+
+        x, y = old_x, old_y
+
+        for _ in range(steps):
+            next_x = x + dx
+            next_y = y + dy
+
+            col_h = False
+            col_v = False
+
+            self.sheep = (next_x, y)
+            if self.sheep_intersect_solid():
+                col_h = True
+                next_x = x
+                self.velocity_x *= -0.25
+
+            self.sheep = (x, next_y)
+            if self.sheep_intersect_solid():
+                col_v = True
+                next_y = y
+                self.velocity_y = 0
+                if was_falling:
+                    self.velocity_x = 0
+
+            x, y = next_x, next_y
+
+            if col_h or col_v:
+                break
+
+        return x, y
+
 
     def apply_vec_on_sheep(self, new_vector: Vector):
         if not new_vector.is_complete() and not self.current_vector.is_complete():
@@ -114,33 +159,15 @@ class Map:
 
         x, y = self.sheep
         self.velocity_y += M_GRAVITY / M_FPS
-        new_x = x + self.velocity_x
-        new_y = y + self.velocity_y
         was_falling = self.velocity_y >= 0
 
-        col_vertical = False
-        col_horizontal = False
+        new_x = x + self.velocity_x
+        new_y = y + self.velocity_y
 
-        self.sheep = (new_x, y)
-        if self.sheep_intersect_solid():
-            col_horizontal = True
-
-        self.sheep = (x, new_y)
-        if self.sheep_intersect_solid():
-            col_vertical = True
-
-        # ✅ position finale propre selon les collisions détectées
-        final_x = x if col_horizontal else new_x
-        final_y = y if col_vertical else new_y
+        final_x, final_y = self._resolve_collision(x, y, new_x, new_y, was_falling)
         self.sheep = (final_x, final_y)
-
-        if col_horizontal:
-            self.velocity_x = 0
-        if col_vertical:
-            self.velocity_y = 0
-            if was_falling:          # ✅ friction seulement en atterrissant
-                self.velocity_x = 0
 
         if self.velocity_x == 0 and self.velocity_y == 0:
             self.current_vector.clear()
 
+    

@@ -77,88 +77,70 @@ class Map:
     
     def show_sheep(self):
         cell_size = M_CELL_SIZE(self.map)
-        sheep_size = cell_size // 2
-
-        x, y = self.sheep  # coordonnées en pixels
-
+        x, y = self.sheep
         ax = x + cell_size//4
-        ay = y + cell_size//2
-        bx = ax + sheep_size
-        by = ay + sheep_size
-
+        ay = y + cell_size//2  # ✅ centré
+        bx = ax + cell_size//2
+        by = ay + cell_size//2
         rectangle(ax, ay, bx, by, couleur="red", remplissage="red")
+
+    def sheep_intersect_solid(self):
+        x, y = self.sheep
+        cell_size = M_CELL_SIZE(self.map)
+        ax = x + cell_size//4
+        ay = y + cell_size//2  # ✅ même chose que show_sheep
+        bx = ax + cell_size//2
+        by = ay + cell_size//2
+        corners = [(ax, ay), (bx, ay), (ax, by), (bx, by)]
+        for cx, cy in corners:
+            i = int(cy // cell_size)
+            j = int(cx // cell_size)
+            if 0 <= i < len(self.map) and 0 <= j < len(self.map[0]):
+                if self.map[i][j] in self._solid:
+                    return True
+        return False
 
     def apply_vec_on_sheep(self, new_vector: Vector):
         if not new_vector.is_complete() and not self.current_vector.is_complete():
             return
 
-        if not self.current_vector.is_complete() and new_vector.is_complete(): 
-            vec = new_vector.copy() 
-            intensity = vec.normalize()  
+        if not self.current_vector.is_complete() and new_vector.is_complete():
+            vec = new_vector.copy()
+            intensity = vec.normalize()
             self.current_vector = vec
-            speed = min(intensity*2, 500) / M_FPS
+            speed = min(intensity * 2, 500) / M_FPS
             self.velocity_x = (vec.x2 - vec.x1) * speed
-            self.velocity_y = ((vec.y2 - vec.y1) * speed) - M_GRAVITY / M_FPS
+            self.velocity_y = (vec.y2 - vec.y1) * speed - M_GRAVITY / M_FPS
 
         x, y = self.sheep
         self.velocity_y += M_GRAVITY / M_FPS
         new_x = x + self.velocity_x
         new_y = y + self.velocity_y
-        self.sheep = (new_x, new_y)
+        was_falling = self.velocity_y >= 0
 
+        col_vertical = False
+        col_horizontal = False
+
+        self.sheep = (new_x, y)
         if self.sheep_intersect_solid():
-            col_vertical = False
-            col_horizontal = False
-            self.sheep = (new_x, y)
-            if self.sheep_intersect_solid():  # collision horizontale
-                col_horizontal = True
-            self.sheep = (x, new_y)
-            if self.sheep_intersect_solid():  # collision verticale (sol ou plafond)
-                col_vertical = True
-            
+            col_horizontal = True
 
-            if col_vertical and col_horizontal:
-                self.current_vector.clear()
+        self.sheep = (x, new_y)
+        if self.sheep_intersect_solid():
+            col_vertical = True
+
+        # ✅ position finale propre selon les collisions détectées
+        final_x = x if col_horizontal else new_x
+        final_y = y if col_vertical else new_y
+        self.sheep = (final_x, final_y)
+
+        if col_horizontal:
+            self.velocity_x = 0
+        if col_vertical:
+            self.velocity_y = 0
+            if was_falling:          # ✅ friction seulement en atterrissant
                 self.velocity_x = 0
-                self.velocity_y = 0
-                self.sheep = (x, y)
-            elif col_vertical:
-                self.velocity_y = 0
-                self.sheep = (x, new_y) 
-                self.sheep = (new_x if not col_horizontal else x, new_y)
-            elif col_horizontal:
-                self.velocity_x = 0
-                self.sheep = (new_x, y)
 
-            if self.velocity_x == 0 and self.velocity_y == 0:
-                self.current_vector.clear()
-
-
-
-    def sheep_intersect_solid(self):
-        x, y = self.sheep
-        cell_size = M_CELL_SIZE(self.map)
-        sheep_size = cell_size // 2
-
-        ax = x + cell_size//4
-        ay = y + cell_size//2
-        bx = ax + sheep_size
-        by = ay + sheep_size
-
-        corners = [
-            (ax, ay),       # haut gauche
-            (bx, ay),       # haut droit
-            (ax, by),       # bas gauche
-            (bx, by)        # bas droit
-        ]
-
-        for cx, cy in corners:
-            i = int(cy // cell_size)
-            j = int(cx // cell_size)
-
-            if 0 <= i < len(self.map) and 0 <= j < len(self.map[0]):
-                if self.map[i][j] in self._solid:
-                    return True
-
-        return False
+        if self.velocity_x == 0 and self.velocity_y == 0:
+            self.current_vector.clear()
 

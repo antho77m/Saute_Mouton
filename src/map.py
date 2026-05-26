@@ -24,12 +24,12 @@ def find_sheep_init(map):
     assert False, "No sheep found in the map"
 
 def valid_map(map):
-    # check if the map is valid (contains only -2, -1, 0, 1)
+    # check if the map is valid (contains only -2, -1, 0, 1 2)
     sheep_count = 0
     end_count = 0
     for row in map:
         for cell in row:
-            if cell not in [-2, -1, 0, 1]:
+            if cell not in [-2, -1, 0, 1,2]:
                 return False
             if cell == -1:
                 sheep_count += 1
@@ -43,16 +43,19 @@ def valid_map(map):
 
 class Map:
     # list of solid cell :
-    _solid = [-2,1]
+    _solid = [1,2]
+    _ice = [2]
 
         
     def __init__(self, filename):
         self.map = load_map(filename)
         self.sheep = find_sheep_init(self.map)
+        self.initial_sheep_position = self.sheep
         self.current_vector = Vector()
         self.current_intensity = 0
         self.velocity_x = 0
         self.velocity_y = 0
+        self.end = False
         if not valid_map(self.map):
             exit("Invalid map")
 
@@ -76,6 +79,8 @@ class Map:
                         couleur = "white"
                     case 1:
                         couleur = "green"
+                    case 2:
+                        couleur = "cyan"
                 rectangle(j * cell_size, i * cell_size, (j + 1) * cell_size, (i + 1) * cell_size,couleur=couleur, remplissage=couleur)
     
     def show_sheep(self):
@@ -85,6 +90,7 @@ class Map:
         ay = y + cell_size//2  
         bx = ax + cell_size//2
         by = ay + cell_size//2
+        # image(ax, ay,"res/mouton.png", largeur=cell_size, hauteur=cell_size,ancrage="w")
         rectangle(ax, ay, bx, by, couleur="red", remplissage="red")
 
     def sheep_intersect_solid(self):
@@ -103,23 +109,15 @@ class Map:
                     return True
         return False
 
-    
     def _resolve_collision(self, old_x, old_y, new_x, new_y, was_falling):
-        """
-        Déplace le mouton de (old_x, old_y) vers (new_x, new_y) en subdivisant
-        le mouvement pour éviter le tunneling. Retourne (final_x, final_y).
-        Met à jour velocity_x / velocity_y en cas de collision.
-        """
-        steps = max(1, int(max(abs(new_x - old_x), abs(new_y - old_y)))) 
+        steps = max(1, int(max(abs(new_x - old_x), abs(new_y - old_y))))
         dx = (new_x - old_x) / steps
         dy = (new_y - old_y) / steps
-
         x, y = old_x, old_y
 
         for _ in range(steps):
             next_x = x + dx
             next_y = y + dy
-
             col_h = False
             col_v = False
 
@@ -128,27 +126,78 @@ class Map:
                 col_h = True
                 next_x = x
                 self.velocity_x *= -0.25
+                if self.sheep_on_end():
+                    self.end = True
 
             self.sheep = (x, next_y)
             if self.sheep_intersect_solid():
+                if self.sheep_on_end():
+                    self.end = True
                 col_v = True
                 next_y = y
                 self.velocity_y = 0
                 if was_falling:
-                    self.velocity_x = 0
+                    self.sheep = (x, y)  
+                    if self._sheep_on_ice():
+                        self.velocity_x *= 0.75
+                    else:
+                        self.velocity_x = 0
 
             x, y = next_x, next_y
-
             if col_h or col_v:
                 break
 
         return x, y
 
+    def _sheep_on_ice(self):
+        x, y = self.sheep
+        cell_size = M_CELL_SIZE(self.map)
+        ax = x + cell_size // 4
+        bx = ax + cell_size // 2
+        by = y + cell_size // 2 + cell_size // 2 + 1  
+
+        for cx in [ax, bx]:
+            j = int(cx // cell_size)
+            i = int(by // cell_size)
+            if 0 <= i < len(self.map) and 0 <= j < len(self.map[0]):
+                if self.map[i][j] in self._ice:
+                    return True
+        return False
+    
+    def sheep_on_end(self):
+        x, y = self.sheep
+        cell_size = M_CELL_SIZE(self.map)
+        ax = x + cell_size//4
+        ay = y + cell_size//2  
+        bx = ax + cell_size//2
+        by = ay + cell_size//2
+        corners = [(ax, ay), (bx, ay), (ax, by), (bx, by)]
+        for cx, cy in corners:
+            i = int(cy // cell_size)
+            j = int(cx // cell_size)
+            if 0 <= i < len(self.map) and 0 <= j < len(self.map[0]):
+                if self.map[i][j] == -2:
+                    return True
+        return False
+    
+    def _is_sheep_not_in_screen(self):
+        x, y = self.sheep
+        cell_size = M_CELL_SIZE(self.map)
+        if x < -cell_size or x > len(self.map[0]) * cell_size:
+            return True
+        if y < -cell_size or y > len(self.map) * cell_size:
+            return True
+        return False
 
     def apply_vec_on_sheep(self, new_vector: Vector):
         if not new_vector.is_complete() and not self.current_vector.is_complete():
             return
-
+        if self._is_sheep_not_in_screen():
+            self.sheep = self.initial_sheep_position
+            self.current_vector.clear()
+            self.velocity_x = 0
+            self.velocity_y = 0
+            return
         if not self.current_vector.is_complete() and new_vector.is_complete():
             vec = new_vector.copy()
             intensity = vec.normalize()
@@ -156,6 +205,7 @@ class Map:
             speed = min(intensity * 2, 500) / M_FPS
             self.velocity_x = (vec.x2 - vec.x1) * speed
             self.velocity_y = (vec.y2 - vec.y1) * speed - M_GRAVITY / M_FPS
+        
 
         x, y = self.sheep
         self.velocity_y += M_GRAVITY / M_FPS
@@ -184,10 +234,8 @@ class Map:
             new_x = x + vx
             new_y = y + vy
 
-            # Sauvegarder la vraie position
             real_sheep = self.sheep
 
-            # Tester la collision sans modifier les vraies vélocités
             self.sheep = (new_x, y)
             if self.sheep_intersect_solid():
                 vx *= -0.25
@@ -231,11 +279,11 @@ class Map:
         points = self._simulate_trajectory(vx, vy)
 
         cell_size = M_CELL_SIZE(self.map)
-        ox = cell_size // 4 + cell_size // 4   # centre de la hitbox
+        ox = cell_size // 4 + cell_size // 4
         oy = cell_size // 2 + cell_size // 4
 
         for i, (x, y) in enumerate(points):
-            # Points de plus en plus transparents pour indiquer le futur lointain
             alpha = 1.0 - (i / len(points))
-            if i % 3 == 0:  # ✅ afficher 1 point sur 3 pour ne pas surcharger
+            if i % 3 == 0:  
                 cercle(x + ox, y + oy, 2, couleur="blue", remplissage="blue")
+

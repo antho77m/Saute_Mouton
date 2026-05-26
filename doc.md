@@ -1,7 +1,7 @@
 ## Documentations de la carte [carte](res/carte.txt)
 
 ### Contraintes :
-- la carte doit être un tableau de taille carree
+- la carte doit être un tableau de taille rectangulaire
 - la carte doit comporter une case de départ et une case d'arrivée
 
 ### Légende :
@@ -9,3 +9,4 @@
 -2 : arrivée
 0 : case vide
 1 : mur
+2 : glace

@@ -1,3 +1,5 @@
+from random import randint
+
 from fltk import *
 from cons import *
 from map import *
@@ -12,12 +14,20 @@ def main():
 
     vector = Vector()
 
-    map = Map("res/carte.txt")
+    files_maps = ["res/carte.txt", "res/carte2.txt", "res/carte3.txt", "res/carte4.txt", "res/carte5.txt", "res/carte6.txt"]
+    
+
+    rand = randint(0, len(files_maps) - 1)
+    print(f"Map choisie : {files_maps[rand]}")
+
+    map = Map(files_maps[rand])
 
     cree_fenetre(M_WIDTH, M_HEIGHT)
     sleep_fps= sleep_for_fps(M_FPS)
 
-    while True:
+    nb_jump = 0
+
+    while not map.end:
         mise_a_jour()
         sleep_fps()
         efface_tout()
@@ -46,8 +56,15 @@ def main():
                 
         map.apply_vec_on_sheep(vector)
         if vector.is_complete(): # on clear apres avoir donné le vector à la map pour éviter de réapliquer le même vector plusieurs fois
-            vector.clear()
-    ferme_fenetre()
+            nb_jump += 1
+            vector.clear() 
+    
+    # Affiche un message de fin
+    while True:
+        mise_a_jour()
+        sleep_fps()
+        efface_tout()
+        texte(M_WIDTH//2, M_HEIGHT//2, f"Félicitations ! Vous avez gagné en {nb_jump} sauts !", couleur="blue", taille=15, ancrage="center")
 
 
 if __name__ == "__main__":

@@ -136,12 +136,9 @@ class Map:
                 col_v = True
                 next_y = y
                 self.velocity_y = 0
-                if was_falling:
-                    self.sheep = (x, y)  
-                    if self._sheep_on_ice():
-                        self.velocity_x *= 0.75
-                    else:
-                        self.velocity_x = 0
+                if was_falling and not self._sheep_on_ice():  # ✅ sol normal seulement
+                    self.velocity_x = 0
+                self.sheep = (x, y)
 
             x, y = next_x, next_y
             if col_h or col_v:
@@ -190,6 +187,10 @@ class Map:
         return False
 
     def apply_vec_on_sheep(self, new_vector: Vector):
+        """
+Applique le vecteur new_vector sur le mouton. Si new_vector n'est pas complet, ne fait rien.
+si un vecteur est déjà appliqué alors on déplace le mouton selon le vecteur déjà gerer par la 
+        """
         if not new_vector.is_complete() and not self.current_vector.is_complete():
             return
         if self._is_sheep_not_in_screen():
@@ -202,10 +203,9 @@ class Map:
             vec = new_vector.copy()
             intensity = vec.normalize()
             self.current_vector = vec
-            speed = min(intensity * 2, 500) / M_FPS
+            speed = min(intensity * 2, 550) / M_FPS
             self.velocity_x = (vec.x2 - vec.x1) * speed
             self.velocity_y = (vec.y2 - vec.y1) * speed - M_GRAVITY / M_FPS
-        
 
         x, y = self.sheep
         self.velocity_y += M_GRAVITY / M_FPS
@@ -216,6 +216,13 @@ class Map:
 
         final_x, final_y = self._resolve_collision(x, y, new_x, new_y, was_falling)
         self.sheep = (final_x, final_y)
+
+        if self._sheep_on_ice():
+            self.velocity_x *= 0.98
+            self.velocity_y = 0  # empêche l'accumulation de gravité quand posé sur la glace (j'avais un bug ou le mouton finissait dans le bloc....)
+
+        if abs(self.velocity_x) < 0.5:
+            self.velocity_x = 0
 
         if self.velocity_x == 0 and self.velocity_y == 0:
             self.current_vector.clear()
@@ -272,7 +279,7 @@ class Map:
         if intensity == 0:
             return
 
-        speed = min(intensity * 2, 500) / M_FPS
+        speed = min(intensity * 2, 550) / M_FPS
         vx = (dx / intensity) * speed
         vy = (dy / intensity) * speed - M_GRAVITY / M_FPS
 

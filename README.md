@@ -14,13 +14,12 @@ Il est recommandé d'utiliser un venv
 
 Affichage d'une carte customisable
 Début de la réalisation du déplacement du mouton
-
+Pouvoir déplacer le mouton (prendre en compte la physique du jeu)
+Visualiser les déplacements du mouton
+Avoir une fin
+Faire en sorte que les blocs ont différents effets (glace)
 
 #### A faire :
-    - pouvoir déplacer le mouton (prendre en compte la physique du jeu)
-    - visualiser les déplacements du mouton
-    - avoir une fin
-    - faire en sorte que les blocs ont différents effets
     - texturer le tout
     - réalisation d'un solveur
     

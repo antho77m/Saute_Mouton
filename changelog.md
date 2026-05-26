@@ -12,3 +12,10 @@ V 0.3:
 V 0.4:
 - Ajout de la prévisualisation du saut du mouton
 - Correction de la physique du jeu
+
+V 0.5:
+- Ajout de la glace (le mouton glisse dessus)
+- Correction de quelques bugs
+- Ajout de nouvelles cartes
+- Ajout d'une fin 
+- Ajout d'une détection de sortie de la carte (la detection se fait aussi si le mouton sort de la carte par le haut)

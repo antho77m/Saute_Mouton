@@ -8,3 +8,7 @@ V 0.2:
 
 V 0.3:
 - Prise en compte de la physique du jeu/colision (gravité, collisions) (avec quelques bugs à régler) (le mouton est sticky pour l'instant)
+
+V 0.4:
+- Ajout de la prévisualisation du saut du mouton
+- Correction de la physique du jeu

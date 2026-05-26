@@ -12,7 +12,6 @@ def load_map(filename):
         for line in f:
             row = [int(x) for x in line.strip().split(',')]
             map.append(row)
-        print(map)
         return map
 
 def find_sheep_init(map):

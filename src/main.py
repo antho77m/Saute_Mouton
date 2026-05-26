@@ -14,7 +14,7 @@ def main():
 
     vector = Vector()
 
-    files_maps = ["res/carte.txt", "res/carte2.txt", "res/carte3.txt", "res/carte4.txt", "res/carte5.txt", "res/carte6.txt"]
+    files_maps = ["res/carte.txt", "res/carte2.txt", "res/carte3.txt", "res/carte4.txt", "res/carte5.txt", "res/carte6.txt", "res/carte7.txt"]
     
 
     rand = randint(0, len(files_maps) - 1)

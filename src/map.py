@@ -20,7 +20,7 @@ def find_sheep_init(map):
     for i in range(len(map)):
         for j in range(len(map[i])):
             if map[i][j] == -1:
-                return (j * cs, i * cs)   # x, y
+                return (j * cs, i * cs -1)   # x, y
     assert False, "No sheep found in the map"
 
 def valid_map(map):
@@ -110,7 +110,7 @@ class Map:
         le mouvement pour éviter le tunneling. Retourne (final_x, final_y).
         Met à jour velocity_x / velocity_y en cas de collision.
         """
-        steps = max(1, int(max(abs(new_x - old_x), abs(new_y - old_y))))
+        steps = max(1, int(max(abs(new_x - old_x), abs(new_y - old_y)))) 
         dx = (new_x - old_x) / steps
         dy = (new_y - old_y) / steps
 
@@ -170,4 +170,72 @@ class Map:
         if self.velocity_x == 0 and self.velocity_y == 0:
             self.current_vector.clear()
 
+    def _simulate_trajectory(self, vx, vy, steps=60):
+        """
+        Simule la trajectoire du mouton sans le déplacer.
+        Retourne une liste de points (x, y) représentant la trajectoire prévue.
+        """
+        x, y = self.sheep
+        points = []
+
+        for _ in range(steps):
+            vy += M_GRAVITY / M_FPS
+            was_falling = vy >= 0
+            new_x = x + vx
+            new_y = y + vy
+
+            # Sauvegarder la vraie position
+            real_sheep = self.sheep
+
+            # Tester la collision sans modifier les vraies vélocités
+            self.sheep = (new_x, y)
+            if self.sheep_intersect_solid():
+                vx *= -0.25
+                new_x = x
+
+            self.sheep = (x, new_y)
+            if self.sheep_intersect_solid():
+                vy = 0
+                if was_falling:
+                    vx = 0
+                new_y = y
+
+            # Restaurer la vraie position
+            self.sheep = real_sheep
+
+            x, y = new_x, new_y
+            points.append((x, y))
+
+            if vx == 0 and vy == 0:
+                break
+
+        return points
     
+    def show_trajectory_preview(self, draw_vector):
+        """
+        Affiche la trajectoire prévue si draw_vector est le vecteur en cours de dessin.
+        """
+        if draw_vector.is_void() or not draw_vector.is_complete():
+            return
+
+        dx = draw_vector.x2 - draw_vector.x1
+        dy = draw_vector.y2 - draw_vector.y1
+        intensity = (dx**2 + dy**2) ** 0.5
+        if intensity == 0:
+            return
+
+        speed = min(intensity * 2, 500) / M_FPS
+        vx = (dx / intensity) * speed
+        vy = (dy / intensity) * speed - M_GRAVITY / M_FPS
+
+        points = self._simulate_trajectory(vx, vy)
+
+        cell_size = M_CELL_SIZE(self.map)
+        ox = cell_size // 4 + cell_size // 4   # centre de la hitbox
+        oy = cell_size // 2 + cell_size // 4
+
+        for i, (x, y) in enumerate(points):
+            # Points de plus en plus transparents pour indiquer le futur lointain
+            alpha = 1.0 - (i / len(points))
+            if i % 3 == 0:  # ✅ afficher 1 point sur 3 pour ne pas surcharger
+                cercle(x + ox, y + oy, 2, couleur="blue", remplissage="blue")

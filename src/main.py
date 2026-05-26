@@ -30,6 +30,9 @@ def main():
             x = abscisse_souris()
             y = ordonnee_souris()
             vector.draw_preview(x, y)
+            temp = vector.copy()
+            temp.set_end(x, y)
+            map.show_trajectory_preview(temp)
         
         coo = ask_clic()
         if coo is not None:
